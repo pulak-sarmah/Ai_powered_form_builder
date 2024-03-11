@@ -15,6 +15,8 @@ import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
 
 import { useSession, signIn } from "next-auth/react";
+import { navigate } from "@/actions/navigateToForm";
+
 type Props = {};
 
 const initialState: {
@@ -31,7 +33,7 @@ const FormGenerator = (props: Props) => {
   const session = useSession();
 
   const onFormCreate = () => {
-    if (session.data?.user) {
+    if (session.status === "authenticated" && session.data?.user) {
       setOpen(true);
     } else {
       signIn();
@@ -41,11 +43,13 @@ const FormGenerator = (props: Props) => {
   useEffect(() => {
     if (state.message === "Form created") {
       setOpen(false);
+      navigate(state.data.formId);
+      toast.success("Form created successfully! 🎉");
     }
     if (state.message !== "" && state.message !== "Form created") {
-      toast("something went wrong, please try again.");
+      toast.error(state.message || "Something went wrong");
     }
-  }, [state.message]);
+  }, [state.message, state]);
 
   return (
     <>
@@ -55,21 +59,23 @@ const FormGenerator = (props: Props) => {
           <DialogHeader>
             <DialogTitle>Create New Form</DialogTitle>
           </DialogHeader>
-          <form action={formAction}>
-            <div className="grid gap-4 py-4">
-              <Textarea
-                id="description"
-                name="description"
-                required
-                placeholder="Share what your form is about, who is it for, and what information you would like to collect. And AI will generate the form for you.🪄"
-              />
-            </div>
+          {session.status === "authenticated" && (
+            <form action={formAction}>
+              <div className="grid gap-4 py-4">
+                <Textarea
+                  id="description"
+                  name="description"
+                  required
+                  placeholder="Share what your form is about, who is it for, and what information you would like to collect. And AI will generate the form for you.🪄"
+                />
+              </div>
 
-            <DialogFooter>
-              <SubmitButton />
-              <Button variant="link">Create Manual Form Instead</Button>
-            </DialogFooter>
-          </form>
+              <DialogFooter>
+                <SubmitButton />
+                <Button variant="link">Create Manual Form Instead</Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
       <Toaster position="top-center" />

@@ -1,8 +1,8 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
-
 import { z } from "zod";
+import { saveForm } from "./mutateForm";
+
 const BASE_URL = process.env.BASE_URL;
 export async function generateForm(
   prevState: {
@@ -22,7 +22,7 @@ export async function generateForm(
     };
   }
 
-  if (!process.env.OPENAI_API_EY) {
+  if (!process.env.OPENAI_API_KEY) {
     return {
       message: "API key not found",
     };
@@ -48,9 +48,23 @@ export async function generateForm(
       }),
     });
     const json = await response.json();
+    const res = JSON.parse(json.choices[0].message.content);
+
+    if (!res.name || !res.description || !res.questions) {
+      return {
+        message: "Failed to generate the form",
+      };
+    }
+
+    const dbFormId = await saveForm({
+      name: res.name,
+      description: res.description,
+      questions: res.questions,
+    });
+
     revalidatePath("/");
     return {
-      data: json,
+      data: { formId: dbFormId },
       message: "Form created",
     };
   } catch (e) {

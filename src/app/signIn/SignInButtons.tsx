@@ -5,18 +5,11 @@ import React from "react";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { signIn } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
+
 const Login = async (provider: string) => {
-  try {
-    const response = await signIn(provider, {
-      callbackUrl: `${window.location.origin}/`,
-    });
-    if (response?.ok) {
-      toast("Sign in successful");
-    }
-  } catch (error) {
-    toast("something went wrong, please try again.");
-  }
+  await signIn(provider, {
+    callbackUrl: `${window.location.origin}/`,
+  });
 };
 const SignInButtons = () => {
   return (
